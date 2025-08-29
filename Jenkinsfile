@@ -45,15 +45,24 @@ pipeline {
                 '''
             }
         }
+
+        stage('Run Alembic Migrations') {
+            steps {
+                echo '🔹 Running backend migrations...'
+                sh '''
+                    docker exec -i ${COMPOSE_PROJECT_NAME}-backend-1 bash -c "cd /app && alembic upgrade head"
+                '''
+            }
+        }
     }
 
     post {
         success {
-            echo '✅ Deployment successful.'
+            echo '✅ Deployment & Migrations successful.'
             sh '${COMPOSE} ps'
         }
         failure {
-            echo '❌ Build/Deploy failed. Showing recent logs...'
+            echo '❌ Build/Deploy/Migrations failed. Showing recent logs...'
             sh '${COMPOSE} logs --no-color --since 15m || true'
         }
         always {

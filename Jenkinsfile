@@ -1,75 +1,38 @@
 pipeline {
-  agent any
+    agent any
 
-  options {
-    timestamps()
-    disableConcurrentBuilds()
-  }
-
-  environment {
-    COMPOSE = 'docker compose'     // agar system me sirf `docker-compose` hai to isko 'docker-compose' kar do
-    COMPOSE_PROJECT_NAME = 'greenx'
-  }
-
-  triggers {
-    githubPush()   // GitHub webhook trigger karega is pipeline ko
-  }
-
-  stages {
-    stage('Checkout') {
-      steps {
-        checkout scm
-      }
+    triggers {
+        githubPush()   // ✅ GitHub webhook trigger
     }
 
-    stage('Verify Docker/Compose') {
-      steps {
-        sh '''
-          docker --version
-          ${COMPOSE} version
-        '''
-      }
-    }
+    stages {
+        stage('Checkout') {
+            steps {
+                git(
+                    url: 'https://github.com/junaid496/GreenX_DCS_Assesment_Tool-main.git',
+                    branch: 'main',
+                    credentialsId: 'github-creds'   // ✅ Aapka GitHub credentialsId
+                )
+            }
+        }
 
-    stage('Build (Compose)') {
-      steps {
-        sh '''
-          ${COMPOSE} build --pull
-        '''
-      }
-    }
+        stage('Build') {
+            steps {
+                sh 'echo "Running Build Step..."'
+            }
+        }
 
-    stage('Deploy (Compose)') {
-      steps {
-        sh '''
-          ${COMPOSE} down || true
-          ${COMPOSE} up -d
-          ${COMPOSE} ps
-        '''
-      }
-    }
-  }
+        stage('Test') {
+            steps {
+                sh 'echo "Running Tests..."'
+            }
+        }
 
-  post {
-    success {
-      echo '✅ Deployment successful.'
-      sh '''
-        ${COMPOSE} ps
-      '''
+        stage('Deploy') {
+            steps {
+                sh 'echo "Deploy step (placeholder)"'
+            }
+        }
     }
-    failure {
-      echo '❌ Build/Deploy failed. Showing recent logs...'
-      sh '''
-        ${COMPOSE} logs --no-color --since 15m || true
-      '''
-    }
-    always {
-      // Logs ko artifact ke taur pe save karna
-      sh '''
-        ${COMPOSE} logs --no-color --since 15m > compose-latest.log || true
-      '''
-      archiveArtifacts artifacts: 'compose-latest.log', allowEmptyArchive: true
-    }
-  }
 }
 

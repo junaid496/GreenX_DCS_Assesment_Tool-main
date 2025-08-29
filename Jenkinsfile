@@ -1,6 +1,15 @@
 pipeline {
     agent any
 
+    environment {
+        COMPOSE = 'docker compose'   // Agar system me sirf 'docker-compose' hai to yahan change kar do
+        COMPOSE_PROJECT_NAME = 'greenx'
+    }
+
+    triggers {
+        githubPush()  // Webhook trigger
+    }
+
     stages {
         stage('Checkout') {
             steps {
@@ -10,48 +19,48 @@ pipeline {
             }
         }
 
-        stage('Lint') {
+        stage('Verify Docker/Compose') {
             steps {
-                sh 'echo "Running Lint..."'
-                // Example: sh 'eslint .'
+                sh '''
+                    docker --version
+                    ${COMPOSE} version
+                '''
             }
         }
 
-        stage('Build') {
+        stage('Build with Compose') {
             steps {
-                sh 'echo "Building application..."'
-                // Example for Node.js: sh 'npm install && npm run build'
+                sh '''
+                    ${COMPOSE} build --pull
+                '''
             }
         }
 
-        stage('Test') {
+        stage('Deploy with Compose') {
             steps {
-                sh 'echo "Running Tests..."'
-                // Example: sh 'npm test'
-            }
-        }
-
-        stage('Docker Build') {
-            steps {
-                sh 'docker build -t myapp:latest .'
-            }
-        }
-
-        stage('Deploy') {
-            steps {
-                sh 'echo "Deploying to server..."'
-                // yahan aap ssh ya docker run use kar sakte ho
+                sh '''
+                    ${COMPOSE} down || true
+                    ${COMPOSE} up -d
+                    ${COMPOSE} ps
+                '''
             }
         }
     }
 
     post {
         success {
-            echo 'Pipeline executed successfully!'
+            echo '✅ Deployment successful.'
+            sh '${COMPOSE} ps'
         }
         failure {
-            echo 'Pipeline failed!'
+            echo '❌ Build/Deploy failed. Showing recent logs...'
+            sh '${COMPOSE} logs --no-color --since 15m || true'
+        }
+        always {
+            sh '${COMPOSE} logs --no-color --since 15m > compose-latest.log || true'
+            archiveArtifacts artifacts: 'compose-latest.log', allowEmptyArchive: true
         }
     }
 }
+
 

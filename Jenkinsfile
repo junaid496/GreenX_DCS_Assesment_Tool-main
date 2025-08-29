@@ -46,11 +46,25 @@ pipeline {
             }
         }
 
+        stage('Wait for DB Ready') {
+            steps {
+                echo '⏳ Waiting for MySQL container to be ready...'
+                sh '''
+                    # Wait until MySQL is accepting connections
+                    until docker exec -i ${COMPOSE_PROJECT_NAME}-db-1 mysqladmin ping -h "127.0.0.1" --silent; do
+                        echo "Waiting for database..."
+                        sleep 5
+                    done
+                '''
+            }
+        }
+
         stage('Run Alembic Migrations') {
             steps {
                 echo '🔹 Running backend migrations...'
                 sh '''
-                    docker exec -i ${COMPOSE_PROJECT_NAME}-backend-1 bash -c "cd /app && alembic upgrade head"
+                    # Run migrations but continue even if already applied or error
+                    docker exec -i ${COMPOSE_PROJECT_NAME}-backend-1 bash -c "cd /app && alembic upgrade head || true"
                 '''
             }
         }

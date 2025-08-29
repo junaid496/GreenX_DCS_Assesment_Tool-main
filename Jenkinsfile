@@ -7,13 +7,12 @@ pipeline {
   }
 
   environment {
-    COMPOSE = 'docker compose'     // agar aapke system me sirf `docker-compose` hai to is value ko 'docker-compose' kar do
+    COMPOSE = 'docker compose'     // agar system me sirf `docker-compose` hai to isko 'docker-compose' kar do
     COMPOSE_PROJECT_NAME = 'greenx'
   }
 
   triggers {
-    // Webhook UI me "GitHub hook trigger..." enable kiya hua hai, yahan kuch rakhna zaroori nahi.
-    // githubPush() bhi use kar sakte ho agar plugin installed ho.
+    githubPush()   // GitHub webhook trigger karega is pipeline ko
   }
 
   stages {
@@ -65,7 +64,7 @@ pipeline {
       '''
     }
     always {
-      // Agar aap logs artifact banana chahein:
+      // Logs ko artifact ke taur pe save karna
       sh '''
         ${COMPOSE} logs --no-color --since 15m > compose-latest.log || true
       '''
@@ -73,3 +72,4 @@ pipeline {
     }
   }
 }
+

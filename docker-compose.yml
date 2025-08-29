@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  frontend:
+    build: ./greenX-assessment-tool-frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+  backend:
+    build: ./GreenX_DCS_Assesment_Tool_Backend
+    env_file:
+      - ./GreenX_DCS_Assesment_Tool_Backend/.env
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+
+  db:
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: passdb0127
+      MYSQL_DATABASE: all_tables
+    ports:
+      - "3306:3306"
+
+ 

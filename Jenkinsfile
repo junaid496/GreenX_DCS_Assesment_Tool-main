@@ -1,37 +1,56 @@
 pipeline {
     agent any
 
-    triggers {
-        githubPush()   // ✅ GitHub webhook trigger
-    }
-
     stages {
         stage('Checkout') {
             steps {
-                git(
+                git branch: 'main',
                     url: 'https://github.com/junaid496/GreenX_DCS_Assesment_Tool-main.git',
-                    branch: 'main',
-                    credentialsId: 'github-creds'   // ✅ Aapka GitHub credentialsId
-                )
+                    credentialsId: 'github-creds'
+            }
+        }
+
+        stage('Lint') {
+            steps {
+                sh 'echo "Running Lint..."'
+                // Example: sh 'eslint .'
             }
         }
 
         stage('Build') {
             steps {
-                sh 'echo "Running Build Step..."'
+                sh 'echo "Building application..."'
+                // Example for Node.js: sh 'npm install && npm run build'
             }
         }
 
         stage('Test') {
             steps {
                 sh 'echo "Running Tests..."'
+                // Example: sh 'npm test'
+            }
+        }
+
+        stage('Docker Build') {
+            steps {
+                sh 'docker build -t myapp:latest .'
             }
         }
 
         stage('Deploy') {
             steps {
-                sh 'echo "Deploy step (placeholder)"'
+                sh 'echo "Deploying to server..."'
+                // yahan aap ssh ya docker run use kar sakte ho
             }
+        }
+    }
+
+    post {
+        success {
+            echo 'Pipeline executed successfully!'
+        }
+        failure {
+            echo 'Pipeline failed!'
         }
     }
 }

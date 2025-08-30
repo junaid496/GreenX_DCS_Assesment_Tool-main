@@ -4,8 +4,7 @@ pipeline {
     environment {
         COMPOSE = 'docker compose'   // Agar system me sirf 'docker-compose' hai to yahan change kar do
         COMPOSE_PROJECT_NAME = 'greenx'
-        DOCKERHUB_CREDENTIALS = 'dockerhub-creds'   // Jenkins me jo creds add kiye hain unka ID
-        DOCKER_IMAGE = 'junaiddocker743/greenx-app'   // apna dockerhub repo name
+        DOCKER_IMAGE = 'junaiddocker743/greenx-app'
     }
 
     triggers {
@@ -23,10 +22,10 @@ pipeline {
 
         stage('Lint') {
             steps {
-                echo '🔍 Running Lint...'
+                echo '🔍 Running flake8 lint checks...'
                 sh '''
-                    # Example Python lint
-                    docker run --rm -v $PWD:/app -w /app python:3.10 bash -c "pip install flake8 && flake8 . || true"
+                    pip install flake8 || true
+                    flake8 --ignore=E501 ./GreenX_DCS_Assesment_Tool_Backend || true
                 '''
             }
         }
@@ -81,12 +80,18 @@ pipeline {
 
         stage('Push to DockerHub') {
             steps {
-                echo '📦 Pushing image to DockerHub...'
-                withCredentials([usernamePassword(credentialsId: "${DOCKERHUB_CREDENTIALS}", usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                echo '📦 Pushing images to DockerHub...'
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                     sh '''
                         echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-                        docker build -t ${DOCKER_IMAGE}:latest .
-                        docker push ${DOCKER_IMAGE}:latest
+                        
+                        # Backend image
+                        docker build -t ${DOCKER_IMAGE}-backend:latest ./GreenX_DCS_Assesment_Tool_Backend
+                        docker push ${DOCKER_IMAGE}-backend:latest
+                        
+                        # Frontend image
+                        docker build -t ${DOCKER_IMAGE}-frontend:latest ./GreenX_DCS_Assesment_Tool_Frontend
+                        docker push ${DOCKER_IMAGE}-frontend:latest
                     '''
                 }
             }
@@ -95,11 +100,11 @@ pipeline {
 
     post {
         success {
-            echo '✅ Deployment, Migrations & DockerHub Push successful.'
+            echo '✅ Deployment, Migrations & Push successful.'
             sh '${COMPOSE} ps'
         }
         failure {
-            echo '❌ Something failed. Showing recent logs...'
+            echo '❌ Build/Deploy/Migrations/Push failed. Showing recent logs...'
             sh '${COMPOSE} logs --no-color --since 15m || true'
         }
         always {

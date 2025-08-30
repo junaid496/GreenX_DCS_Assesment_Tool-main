@@ -90,7 +90,7 @@ pipeline {
                         docker push ${DOCKER_IMAGE}-backend:latest
                         
                         # Frontend image
-                        docker build -t ${DOCKER_IMAGE}-frontend:latest ./GreenX_DCS_Assesment_Tool_Frontend
+                        docker build -t ${DOCKER_IMAGE}-frontend:latest ./greenX-assessment-tool-frontend
                         docker push ${DOCKER_IMAGE}-frontend:latest
                     '''
                 }

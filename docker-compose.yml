@@ -15,7 +15,8 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      - db
+      db:
+        condition: service_healthy   # ✅ wait until db is healthy
 
   db:
     image: mysql:5.7
@@ -25,5 +26,11 @@ services:
       MYSQL_DATABASE: all_tables
     ports:
       - "3306:3306"
+    healthcheck:                      # ✅ add healthcheck for DB readiness
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "--silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
 
  

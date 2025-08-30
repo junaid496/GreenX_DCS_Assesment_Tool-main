@@ -22,7 +22,7 @@ pipeline {
 
         stage('Lint') {
             steps {
-                echo '🔍 Running flake8 lint checks...'
+                echo ' Running flake8 lint checks...'
                 sh '''
                     pip install flake8 || true
                     flake8 --ignore=E501 ./GreenX_DCS_Assesment_Tool_Backend || true
@@ -59,7 +59,7 @@ pipeline {
 
         stage('Wait for DB Ready') {
             steps {
-                echo '⏳ Waiting for MySQL container to be ready...'
+                echo ' Waiting for MySQL container to be ready...'
                 sh '''
                     until docker exec -i ${COMPOSE_PROJECT_NAME}-db-1 mysqladmin ping -h "127.0.0.1" --silent; do
                         echo "Waiting for database..."
@@ -71,7 +71,7 @@ pipeline {
 
         stage('Run Alembic Migrations') {
             steps {
-                echo '🔹 Running backend migrations...'
+                echo ' Running backend migrations...'
                 sh '''
                     docker exec -i ${COMPOSE_PROJECT_NAME}-backend-1 bash -c "cd /app && alembic upgrade head || true"
                 '''
@@ -80,7 +80,7 @@ pipeline {
 
         stage('Push to DockerHub') {
             steps {
-                echo '📦 Pushing images to DockerHub...'
+                echo ' Pushing images to DockerHub...'
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                     sh '''
                         echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
@@ -100,21 +100,21 @@ pipeline {
 
     post {
         success {
-            echo '✅ Deployment, Migrations & Push successful.'
+            echo ' Deployment, Migrations & Push successful.'
             sh '${COMPOSE} ps'
             
             // Email notification on success
             mail to: 'hafizjunaidhussain4@gmail.com',
-                 subject: "✅ Pipeline Success: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                 subject: " Pipeline Success: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
                  body: "Tera kaam ho gya bro.\nCheck Jenkins for details: ${env.BUILD_URL}"
         }
         failure {
-            echo '❌ Build/Deploy/Migrations/Push failed. Showing recent logs...'
+            echo ' Build/Deploy/Migrations/Push failed. Showing recent logs...'
             sh '${COMPOSE} logs --no-color --since 15m || true'
             
             // Email notification on failure
             mail to: 'hafizjunaidhussain4@gmail.com',
-                 subject: "❌ Pipeline Failed: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                 subject: " Pipeline Failed: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
                  body: "The pipeline failed.\nCheck Jenkins for details: ${env.BUILD_URL}"
         }
         always {

@@ -1,25 +1,22 @@
+# Use official Node image
 FROM node:18-alpine
 
-# Working dir
+# Set working directory
 WORKDIR /app
 
-# Copy package.json and install dependencies
+# Copy package files and install dependencies
 COPY package.json package-lock.json ./
-RUN npm install --legacy-peer-deps
+RUN npm install
 
-# Copy rest of the code
+# Copy the rest of the code
 COPY . .
 
-# Build React app
-RUN npm run build
-
-# Install serve globally to serve production build
-RUN npm install -g serve
-
-# Expose port
+# Expose frontend dev port
 EXPOSE 3000
 
-# Serve production build
-CMD ["serve", "-s", "build", "-l", "3000"]
+# Start the React app
+CMD ["npm", "start"]
+
+
 
 

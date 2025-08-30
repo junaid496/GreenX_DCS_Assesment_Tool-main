@@ -15,7 +15,7 @@ RUN npm install @babel/plugin-proposal-private-property-in-object --save-dev
 # Copy rest of the code
 COPY . .
 
-# Optional: increase memory for build
+# Optional: increase memory for buil
 ENV NODE_OPTIONS=--max_old_space_size=4096
 
 # Build React app

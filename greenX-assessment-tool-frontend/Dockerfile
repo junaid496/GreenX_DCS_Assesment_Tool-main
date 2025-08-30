@@ -1,33 +1,24 @@
+
+# Use official Node image
 FROM node:18-alpine
 
+# Set working directory
 WORKDIR /app
 
-# Copy package files
+# Copy package files and install dependencies
 COPY package.json package-lock.json ./
+RUN npm install
 
-# Install dependencies (legacy-peer-deps for old CRA)
-RUN npm install --legacy-peer-deps
-
-# Add missing dependencies explicitly
-RUN npm install echarts --save
-RUN npm install @babel/plugin-proposal-private-property-in-object --save-dev
-
-# Copy rest of the code
+# Copy the rest of the code
 COPY . .
 
-# Optional: increase memory for buil
-ENV NODE_OPTIONS=--max_old_space_size=4096
-
-# Build React app
-RUN npm run build
-
-# Install serve globally to serve production build
-RUN npm install -g serve
-
+# Expose frontend dev port
 EXPOSE 3000
 
-# Serve production build
-CMD ["serve", "-s", "build", "-l", "3000"]
+# Start the React app
+CMD ["npm", "start"]
+
+
 
 
 

@@ -106,7 +106,7 @@ pipeline {
             // Email notification on success
             mail to: 'hafizjunaidhussain4@gmail.com',
                  subject: "✅ Pipeline Success: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                 body: "The pipeline ran successfully.\nCheck Jenkins for details: ${env.BUILD_URL}"
+                 body: "Tera kaam ho gya bro.\nCheck Jenkins for details: ${env.BUILD_URL}"
         }
         failure {
             echo '❌ Build/Deploy/Migrations/Push failed. Showing recent logs...'

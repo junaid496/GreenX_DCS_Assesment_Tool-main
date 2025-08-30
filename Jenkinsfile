@@ -21,7 +21,7 @@ pipeline {
 
         stage('Lint') {
             steps {
-                echo ' Running flake8 lint checks...'
+                echo '🔍 Running flake8 lint checks...'
                 sh '''
                     pip install flake8 || true
                     flake8 --ignore=E501 ./GreenX_DCS_Assesment_Tool_Backend || true
@@ -32,10 +32,21 @@ pipeline {
         stage('Build Images') {
             steps {
                 echo '🐳 Building Docker images...'
-                sh '''
-                    docker build -t ${DOCKER_IMAGE}-backend:latest ./GreenX_DCS_Assesment_Tool_Backend
-                    docker build -t ${DOCKER_IMAGE}-frontend:latest ./greenX-assessment-tool-frontend
-                '''
+
+                // Backend Docker build
+                sh 'docker build -t ${DOCKER_IMAGE}-backend:latest ./GreenX_DCS_Assesment_Tool_Backend'
+
+                // Frontend Docker build with timeout to avoid hang
+                timeout(time: 15, unit: 'MINUTES') {
+                    sh '''
+                        cd ./greenX-assessment-tool-frontend
+                        rm -rf node_modules package-lock.json || true
+                        npm install --legacy-peer-deps
+                        npm run build
+                        cd ..
+                        docker build -t ${DOCKER_IMAGE}-frontend:latest ./greenX-assessment-tool-frontend
+                    '''
+                }
             }
         }
 
@@ -97,4 +108,5 @@ pipeline {
         }
     }
 }
+
 

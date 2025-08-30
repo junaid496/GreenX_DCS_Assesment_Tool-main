@@ -7,7 +7,7 @@ pipeline {
     }
 
     triggers {
-        githubPush()  // GitHub webhook trigger
+        githubPush() // GitHub webhook se trigger
     }
 
     stages {
@@ -19,40 +19,31 @@ pipeline {
             }
         }
 
-        stage('Lint') {
+        stage('Lint & Build Docker Images') {
             steps {
-                echo '🔍 Running flake8 lint checks...'
+                echo '🔍 Linting backend and building Docker images...'
                 sh '''
+                    # Backend lint
                     pip install flake8 || true
                     flake8 --ignore=E501 ./GreenX_DCS_Assesment_Tool_Backend || true
+
+                    # Build backend Docker image
+                    docker build -t ${DOCKER_IMAGE}-backend:latest ./GreenX_DCS_Assesment_Tool_Backend
+
+                    # Frontend Docker build
+                    cd ./greenX-assessment-tool-frontend
+                    rm -rf node_modules package-lock.json || true
+                    npm install --legacy-peer-deps
+                    npm run build
+                    cd ..
+                    docker build -t ${DOCKER_IMAGE}-frontend:latest ./greenX-assessment-tool-frontend
                 '''
             }
         }
 
-        stage('Build Images') {
+        stage('Push Docker Images') {
             steps {
-                echo '🐳 Building Docker images...'
-
-                // Backend Docker build
-                sh 'docker build -t ${DOCKER_IMAGE}-backend:latest ./GreenX_DCS_Assesment_Tool_Backend'
-
-                // Frontend Docker build with timeout to avoid hang
-                timeout(time: 15, unit: 'MINUTES') {
-                    sh '''
-                        cd ./greenX-assessment-tool-frontend
-                        rm -rf node_modules package-lock.json || true
-                        npm install --legacy-peer-deps
-                        npm run build
-                        cd ..
-                        docker build -t ${DOCKER_IMAGE}-frontend:latest ./greenX-assessment-tool-frontend
-                    '''
-                }
-            }
-        }
-
-        stage('Push to DockerHub') {
-            steps {
-                echo '📦 Pushing images to DockerHub...'
+                echo '📦 Pushing Docker images...'
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                     sh '''
                         echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
@@ -63,29 +54,18 @@ pipeline {
             }
         }
 
-        stage('Deploy to Remote Server') {
+        stage('Deploy to Server') {
             steps {
-                echo '🚀 Deploying to remote server...'
+                echo '🚀 Deploying on remote server...'
                 sshagent(['deploy-creds']) {
                     sh '''
                         ssh -o StrictHostKeyChecking=no deploy@${DEPLOY_HOST} "
-                            # Pull latest images
-                            docker pull ${DOCKER_IMAGE}-backend:latest &&
-                            docker pull ${DOCKER_IMAGE}-frontend:latest &&
-
-                            # Git clone/update fix
-                            if [ -d ~/greenx/.git ]; then
-                                cd ~/greenx && git reset --hard && git pull origin main
-                            else
-                                rm -rf ~/greenx
-                                git clone https://github.com/junaid496/GreenX_DCS_Assesment_Tool-main.git greenx
-                                cd ~/greenx
-                            fi &&
-
-                            # Deployment using docker-compose (legacy binary)
-                            docker-compose down || true &&
-                            docker-compose up -d &&
-                            docker-compose ps
+                            docker pull ${DOCKER_IMAGE}-backend:latest
+                            docker pull ${DOCKER_IMAGE}-frontend:latest
+                            cd ~/greenx || git clone https://github.com/junaid496/GreenX_DCS_Assesment_Tool-main.git greenx
+                            cd ~/greenx
+                            docker-compose down || true
+                            docker-compose up -d
                         "
                     '''
                 }
@@ -94,18 +74,8 @@ pipeline {
     }
 
     post {
-        success {
-            echo '✅ Build + Push + Remote Deploy successful.'
-            mail to: 'hafizjunaidhussain4@gmail.com',
-                 subject: "✅ Pipeline Success: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                 body: "Deployment to remote server successful.\nCheck Jenkins for details: ${env.BUILD_URL}"
-        }
-        failure {
-            echo '❌ Pipeline failed. Check logs.'
-            mail to: 'hafizjunaidhussain4@gmail.com',
-                 subject: "❌ Pipeline Failed: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                 body: "The pipeline failed.\nCheck Jenkins for details: ${env.BUILD_URL}"
-        }
+        success { echo '✅ Pipeline finished successfully.' }
+        failure { echo '❌ Pipeline failed.' }
     }
 }
 

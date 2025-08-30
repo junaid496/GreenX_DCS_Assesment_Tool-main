@@ -21,7 +21,7 @@ pipeline {
 
         stage('Lint') {
             steps {
-                echo '🔍 Running flake8 lint checks...'
+                echo ' Running flake8 lint checks...'
                 sh '''
                     pip install flake8 || true
                     flake8 --ignore=E501 ./GreenX_DCS_Assesment_Tool_Backend || true

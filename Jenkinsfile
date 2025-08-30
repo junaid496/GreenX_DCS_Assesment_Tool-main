@@ -7,7 +7,7 @@ pipeline {
     }
 
     triggers {
-        githubPush()  // Webhook trigger
+        githubPush()  // GitHub webhook trigger
     }
 
     stages {
@@ -58,14 +58,23 @@ pipeline {
                 sshagent(['deploy-creds']) {
                     sh '''
                         ssh -o StrictHostKeyChecking=no deploy@${DEPLOY_HOST} "
+                            # Pull latest images
                             docker pull ${DOCKER_IMAGE}-backend:latest &&
                             docker pull ${DOCKER_IMAGE}-frontend:latest &&
-                            cd ~/greenx || git clone https://github.com/junaid496/GreenX_DCS_Assesment_Tool-main.git greenx;
-                            cd ~/greenx &&
-                            git pull origin main &&
-                            docker compose down || true &&
-                            docker compose up -d &&
-                            docker compose ps
+
+                            # Git clone/update fix
+                            if [ -d ~/greenx/.git ]; then
+                                cd ~/greenx && git reset --hard && git pull origin main
+                            else
+                                rm -rf ~/greenx
+                                git clone https://github.com/junaid496/GreenX_DCS_Assesment_Tool-main.git greenx
+                                cd ~/greenx
+                            fi &&
+
+                            # Deployment using docker-compose (legacy binary)
+                            docker-compose down || true &&
+                            docker-compose up -d &&
+                            docker-compose ps
                         "
                     '''
                 }
@@ -76,14 +85,12 @@ pipeline {
     post {
         success {
             echo '✅ Build + Push + Remote Deploy successful.'
-            // Email notification on success
             mail to: 'hafizjunaidhussain4@gmail.com',
                  subject: "✅ Pipeline Success: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
                  body: "Deployment to remote server successful.\nCheck Jenkins for details: ${env.BUILD_URL}"
         }
         failure {
             echo '❌ Pipeline failed. Check logs.'
-            // Email notification on failure
             mail to: 'hafizjunaidhussain4@gmail.com',
                  subject: "❌ Pipeline Failed: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
                  body: "The pipeline failed.\nCheck Jenkins for details: ${env.BUILD_URL}"

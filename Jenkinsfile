@@ -102,10 +102,20 @@ pipeline {
         success {
             echo '✅ Deployment, Migrations & Push successful.'
             sh '${COMPOSE} ps'
+            
+            // Email notification on success
+            mail to: 'hafizjunaidhussain4@gmail.com',
+                 subject: "✅ Pipeline Success: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                 body: "The pipeline ran successfully.\nCheck Jenkins for details: ${env.BUILD_URL}"
         }
         failure {
             echo '❌ Build/Deploy/Migrations/Push failed. Showing recent logs...'
             sh '${COMPOSE} logs --no-color --since 15m || true'
+            
+            // Email notification on failure
+            mail to: 'hafizjunaidhussain4@gmail.com',
+                 subject: "❌ Pipeline Failed: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                 body: "The pipeline failed.\nCheck Jenkins for details: ${env.BUILD_URL}"
         }
         always {
             sh '${COMPOSE} logs --no-color --since 15m > compose-latest.log || true'
@@ -113,5 +123,4 @@ pipeline {
         }
     }
 }
-
 

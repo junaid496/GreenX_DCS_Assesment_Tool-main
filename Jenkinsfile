@@ -2,114 +2,48 @@ pipeline {
     agent any
 
     environment {
-        COMPOSE = 'docker compose'   // Agar system me sirf 'docker-compose' hai to yahan change kar do
-        COMPOSE_PROJECT_NAME = 'greenx'
-        DOCKER_IMAGE = 'junaiddocker743/greenx-app'
-    }
-
-    triggers {
-        githubPush()  // Webhook trigger
+        DEPLOY_SERVER = '192.168.18.116'
+        APP_DIR = '/home/deploy/greenx_app' // directory on deploy server
     }
 
     stages {
-        stage('Checkout') {
+        stage('Clone Repository') {
             steps {
-                git branch: 'main',
-                    url: 'https://github.com/junaid496/GreenX_DCS_Assesment_Tool-main.git',
-                    credentialsId: 'github-creds'
+                // Pull code from GitHub
+                git branch: 'main', url: 'https://github.com/junaid496/GreenX_DCS_Assesment_Tool-main.git'
             }
         }
 
-        stage('Lint') {
+        stage('Build Docker Images') {
             steps {
-                echo '🔍 Running flake8 lint checks...'
-                sh '''
-                    pip install flake8 || true
-                    flake8 --ignore=E501 ./GreenX_DCS_Assesment_Tool_Backend || true
-                '''
+                // Build Docker images locally on Jenkins server using Docker Compose
+                sh 'docker-compose -f docker-compose.yml build'
             }
         }
 
-        stage('Verify Docker/Compose') {
+        stage('Deploy to Remote Server') {
             steps {
-                sh '''
-                    docker --version
-                    ${COMPOSE} version
-                '''
-            }
-        }
+                // Copy all project files to deploy server
+                sh "rsync -avz --delete ./ deploy@${DEPLOY_SERVER}:${APP_DIR}"
 
-        stage('Build with Compose') {
-            steps {
-                sh '''
-                    ${COMPOSE} build --pull
-                '''
-            }
-        }
-
-        stage('Deploy with Compose') {
-            steps {
-                sh '''
-                    ${COMPOSE} down || true
-                    ${COMPOSE} up -d
-                    ${COMPOSE} ps
-                '''
-            }
-        }
-
-        stage('Wait for DB Ready') {
-            steps {
-                echo '⏳ Waiting for MySQL container to be ready...'
-                sh '''
-                    until docker exec -i ${COMPOSE_PROJECT_NAME}-db-1 mysqladmin ping -h "127.0.0.1" --silent; do
-                        echo "Waiting for database..."
-                        sleep 5
-                    done
-                '''
-            }
-        }
-
-        stage('Run Alembic Migrations') {
-            steps {
-                echo '🔹 Running backend migrations...'
-                sh '''
-                    docker exec -i ${COMPOSE_PROJECT_NAME}-backend-1 bash -c "cd /app && alembic upgrade head || true"
-                '''
-            }
-        }
-
-        stage('Push to DockerHub') {
-            steps {
-                echo '📦 Pushing images to DockerHub...'
-                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    sh '''
-                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-                        
-                        # Backend image
-                        docker build -t ${DOCKER_IMAGE}-backend:latest ./GreenX_DCS_Assesment_Tool_Backend
-                        docker push ${DOCKER_IMAGE}-backend:latest
-                        
-                        # Frontend image
-                        docker build -t ${DOCKER_IMAGE}-frontend:latest ./greenX-assessment-tool-frontend
-                        docker push ${DOCKER_IMAGE}-frontend:latest
-                    '''
-                }
+                // SSH into deploy server and run docker-compose
+                sh """
+                ssh deploy@${DEPLOY_SERVER} '
+                    cd ${APP_DIR} &&
+                    docker-compose down &&
+                    docker-compose up -d --build
+                '
+                """
             }
         }
     }
 
     post {
         success {
-            echo '✅ Deployment, Migrations & Push successful.'
-            sh '${COMPOSE} ps'
+            echo 'Deployment Successful!'
         }
         failure {
-            echo '❌ Build/Deploy/Migrations/Push failed. Showing recent logs...'
-            sh '${COMPOSE} logs --no-color --since 15m || true'
-        }
-        always {
-            sh '${COMPOSE} logs --no-color --since 15m > compose-latest.log || true'
-            archiveArtifacts artifacts: 'compose-latest.log', allowEmptyArchive: true
+            echo 'Deployment Failed!'
         }
     }
 }

@@ -38,12 +38,12 @@ pipeline {
                 sshagent(['ssh-root-key']) {  
                     sh """  
                         ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST} 'mkdir -p ${DEPLOY_PATH}'  
-                        scp -o StrictHostKeyChecking=no -r \  
-                            GreenX_DCS_Assesment_Tool_Backend \  
-                            greenX-assessment-tool-frontend \  
-                            docker-compose.yml \  
-                            Jenkinsfile \  
-                            README.md \  
+                        scp -o StrictHostKeyChecking=no -r \
+                            GreenX_DCS_Assesment_Tool_Backend \
+                            greenX-assessment-tool-frontend \
+                            docker-compose.yml \
+                            Jenkinsfile \
+                            README.md \
                             ${DEPLOY_USER}@${DEPLOY_HOST}:${DEPLOY_PATH}/  
                     """  
                 }  

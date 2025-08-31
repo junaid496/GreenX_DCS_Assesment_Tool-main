@@ -17,7 +17,7 @@ pipeline {
         stage('Build Docker Images') {
             steps {
                 // Build Docker images locally on Jenkins server using Docker Compose
-                sh 'docker-compose -f docker-compose.yml build'
+                sh 'docker-compose -f docker-compose.yml build --no-cache'
             }
         }
 

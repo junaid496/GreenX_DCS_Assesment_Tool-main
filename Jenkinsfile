@@ -2,59 +2,51 @@ pipeline {
     agent any
 
     environment {
-        DEPLOY_SERVER = '192.168.18.116'
-        APP_DIR = '/home/deploy/greenx_app' // directory on deploy server
-    }
-
-    triggers {
-        // Trigger pipeline via GitHub webhook
-        githubPush()
+        DEPLOY_HOST = '192.168.18.116'
+        DEPLOY_PATH = '/root/project'
     }
 
     stages {
-        stage('Clone Repository') {
+        stage('Clone Code from GitHub') {
             steps {
-                // Clean workspace to avoid old code/cache issues
-                deleteDir()
-
-                // Pull code from GitHub using credentials
-                git branch: 'main',
-                    url: 'https://github.com/junaid496/GreenX_DCS_Assesment_Tool-main.git',
-                    credentialsId: 'github-creds'
+                checkout([$class: 'GitSCM',
+                    branches: [[name: '*/main']],
+                    userRemoteConfigs: [[url: 'https://github.com/junaid496/GreenX_DCS_Assesment_Tool-main.git']]
+                ])
             }
         }
 
         stage('Build Docker Images') {
             steps {
-                // Build Docker images locally on Jenkins server using Docker Compose with no cache
-                sh 'docker-compose -f docker-compose.yml build --no-cache'
+                sh 'docker compose build'
             }
         }
 
-        stage('Deploy to Remote Server') {
+        stage('Copy Project to Remote Server') {
             steps {
-                // Copy all project files to deploy server
-                sh "rsync -avz --delete ./ deploy@${DEPLOY_SERVER}:${APP_DIR}"
-
-                // SSH into deploy server and restart Docker Compose stack
-                sh """
-                ssh deploy@${DEPLOY_SERVER} '
-                    cd ${APP_DIR} &&
-                    docker-compose down &&
-                    docker-compose up -d --build
-                '
-                """
+                sshagent(['ssh-root-key']) {
+                    sh """
+                        ssh root@${DEPLOY_HOST} 'mkdir -p ${DEPLOY_PATH}'
+                        scp -r * root@${DEPLOY_HOST}:${DEPLOY_PATH}/
+                    """
+                }
             }
         }
-    }
 
-    post {
-        success {
-            echo 'Deployment Successful!'
-        }
-        failure {
-            echo 'Deployment Failed!'
+        stage('Deploy on Remote Server') {
+            steps {
+                sshagent(['ssh-root-key']) {
+                    sh """
+                        ssh root@${DEPLOY_HOST} '
+                            cd ${DEPLOY_PATH} &&
+                            docker compose down || true &&
+                            docker compose up --build -d
+                        '
+                    """
+                }
+            }
         }
     }
 }
+
 

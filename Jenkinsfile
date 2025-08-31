@@ -15,7 +15,7 @@ pipeline {
                     sh 'git config --global http.postBuffer 524288000'
                     checkout([$class: 'GitSCM',
                         branches: [[name: '*/main']],
-                        userRemoteConfigs: [[url: 'https://github.com/rizwan7161/jenkins.git']],
+                        userRemoteConfigs: [[url: 'https://github.com/junaid496/GreenX_DCS_Assesment_Tool-main.git']],
                         extensions: [[$class: 'CloneOption', shallow: true, depth: 1, timeout: 10]]
                     ])
                 }

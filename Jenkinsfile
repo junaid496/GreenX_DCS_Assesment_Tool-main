@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         DEPLOY_SERVER = '192.168.18.116'
-        APP_DIR = '/home/ubuntu/greenx_app' // directory on deploy server
+        APP_DIR = '/home/deploy/greenx_app' // directory on deploy server
     }
 
     triggers {
@@ -34,11 +34,11 @@ pipeline {
         stage('Deploy to Remote Server') {
             steps {
                 // Copy all project files to deploy server
-                sh "rsync -avz --delete ./ ubuntu@${DEPLOY_SERVER}:${APP_DIR}"
+                sh "rsync -avz --delete ./ deploy@${DEPLOY_SERVER}:${APP_DIR}"
 
                 // SSH into deploy server and restart Docker Compose stack
                 sh """
-                ssh ubuntu@${DEPLOY_SERVER} '
+                ssh deploy@${DEPLOY_SERVER} '
                     cd ${APP_DIR} &&
                     docker-compose down &&
                     docker-compose up -d --build

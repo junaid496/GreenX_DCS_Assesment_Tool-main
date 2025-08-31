@@ -5,17 +5,16 @@ FROM node:18-alpine
 WORKDIR /app
 
 # Copy package files and install dependencies
-COPY package.json package-lock.json ./
+COPY package*.json ./
 RUN npm install
 
 # Copy the rest of the code
 COPY . .
-
-# Expose frontend dev port
-EXPOSE 3000
+RUN npm run build
+RUN npm install -g serve
 
 # Start the React app
-CMD ["npm", "start"]
+CMD ["serve", "-s", "build", "-l", "3000"]
 
 
 

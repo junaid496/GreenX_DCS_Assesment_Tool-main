@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         DEPLOY_SERVER = '192.168.18.116'
-        APP_DIR = '/home/ubuntu/greenx_app' // directory on deploy server
+        APP_DIR = '/home/ubuntu/greenx_app' // directory on deploy serve
     }
 
     triggers {

@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        COMPOSE = 'docker compose'   // If your system uses 'docker-compose', change this
+        COMPOSE = 'docker compose'   // If your system uses 'docker-compose', change thi
         COMPOSE_PROJECT_NAME = 'greenx'
         DOCKER_IMAGE = 'junaiddocker743/greenx-app'
     }

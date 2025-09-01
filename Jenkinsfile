@@ -9,6 +9,30 @@ pipeline {
     }
 
     stages {
+        stage('Lint Code') {
+            steps {
+                sh '''
+                    echo "🔍 Running Lint Checks..."
+                    
+                    # Backend Linting
+                    if [ -d "GreenX_DCS_Assesment_Tool_Backend" ]; then
+                        echo "➡️ Linting Python Backend..."
+                        pip install flake8 > /dev/null 2>&1 || true
+                        flake8 GreenX_DCS_Assesment_Tool_Backend || true
+                    fi
+                    
+                    # Frontend Linting
+                    if [ -d "greenX-assessment-tool-frontend" ]; then
+                        echo "➡️ Linting Frontend..."
+                        cd greenX-assessment-tool-frontend
+                        npm install eslint --silent || true
+                        npx eslint . || true
+                        cd ..
+                    fi
+                '''
+            }
+        }
+
         stage('Clone Code from GitHub') {
             steps {
                 retry(3) {
@@ -31,7 +55,7 @@ pipeline {
         stage('Copy Project to Deployment Server') {
             steps {
                 sh """
-                    echo " Copying project files to remote server..."
+                    echo "📂 Copying project files to remote server..."
                     ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST} 'mkdir -p ${DEPLOY_PATH}'
                     rsync -avz --exclude 'venv' --exclude '__pycache__' --exclude 'node_modules' \
                         --exclude '.git' --exclude '.dockerignore' \
@@ -43,7 +67,7 @@ pipeline {
         stage('Deploy on Remote Server') {
             steps {
                 sh """
-                    echo "Deploying on remote doger ka server..."
+                    echo "🚀 Deploying on remote docker server..."
                     ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST} '
                         cd ${DEPLOY_PATH} &&
                         mkdir -p data/db data/backend data/frontend &&

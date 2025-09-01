@@ -1,0 +1,20 @@
+# Python
+venv/
+__pycache__/
+
+# Node
+greenX-assessment-tool-frontend/node_modules/
+
+# Git
+.git
+.gitignore
+
+# Logs
+*.log
+*.tmp
+*.cache
+
+# Jenkins/Docker
+Dockerfile
+docker-compose.yml
+Jenkinsfile

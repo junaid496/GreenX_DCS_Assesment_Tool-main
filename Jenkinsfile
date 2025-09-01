@@ -43,7 +43,7 @@ pipeline {
         stage('Deploy on Remote Server') {
             steps {
                 sh """
-                    echo "🚀 Deploying on remote server..."
+                    echo "Deploying on remote server..."
                     ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST} '
                         cd ${DEPLOY_PATH} &&
                         mkdir -p data/db data/backend data/frontend &&

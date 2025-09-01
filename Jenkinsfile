@@ -33,6 +33,24 @@ pipeline {
             }
         }
 
+        stage('Security Scan') {
+            steps {
+                sh '''
+                    echo "🛡️ Running Security Scans..."
+                    pip install bandit > /dev/null 2>&1 || true
+                    bandit -r GreenX_DCS_Assesment_Tool_Backend || true
+
+                    if [ -d "greenX-assessment-tool-frontend" ]; then
+                        cd greenX-assessment-tool-frontend
+                        npm audit || true
+                        cd ..
+                    fi
+
+                    trivy image project-backend:latest || true
+                '''
+            }
+        }
+
         stage('Clone Code from GitHub') {
             steps {
                 retry(3) {
@@ -79,6 +97,7 @@ pipeline {
         }
     }
 }
+
 
 
 

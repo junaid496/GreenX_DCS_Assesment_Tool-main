@@ -22,17 +22,6 @@ pipeline {
             }
         }
 
-        stage('Clean Local Repo') {
-            steps {
-                sh """
-                    echo Cleaning unnecessary files...
-                    rm -rf GreenX_DCS_Assesment_Tool_Backend/venv
-                    rm -rf GreenX_DCS_Assesment_Tool_Backend/__pycache__
-                    rm -rf greenX-assessment-tool-frontend/node_modules
-                """
-            }
-        }
-
         stage('Build Docker Images') {
             steps {
                 sh 'docker-compose build'
@@ -42,8 +31,11 @@ pipeline {
         stage('Copy Project to Deployment Server') {
             steps {
                 sh """
+                    echo "📂 Copying project files to remote server..."
                     ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST} 'mkdir -p ${DEPLOY_PATH}'
-                    scp -o StrictHostKeyChecking=no -r * ${DEPLOY_USER}@${DEPLOY_HOST}:${DEPLOY_PATH}/
+                    rsync -avz --exclude 'venv' --exclude '__pycache__' --exclude 'node_modules' \
+                        --exclude '.git' --exclude '.dockerignore' \
+                        * ${DEPLOY_USER}@${DEPLOY_HOST}:${DEPLOY_PATH}/
                 """
             }
         }
@@ -51,6 +43,7 @@ pipeline {
         stage('Deploy on Remote Server') {
             steps {
                 sh """
+                    echo "🚀 Deploying on remote server..."
                     ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST} '
                         cd ${DEPLOY_PATH} &&
                         mkdir -p data/db data/backend data/frontend &&
@@ -62,6 +55,7 @@ pipeline {
         }
     }
 }
+
 
 
 

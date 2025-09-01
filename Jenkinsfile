@@ -31,7 +31,7 @@ pipeline {
         stage('Copy Project to Deployment Server') {
             steps {
                 sh """
-                    echo "📂 Copying project files to remote server..."
+                    echo " Copying project files to remote server..."
                     ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST} 'mkdir -p ${DEPLOY_PATH}'
                     rsync -avz --exclude 'venv' --exclude '__pycache__' --exclude 'node_modules' \
                         --exclude '.git' --exclude '.dockerignore' \

@@ -22,6 +22,17 @@ pipeline {
             }
         }
 
+        stage('Clean Local Repo') {
+            steps {
+                sh """
+                    echo Cleaning unnecessary files...
+                    rm -rf GreenX_DCS_Assesment_Tool_Backend/venv
+                    rm -rf GreenX_DCS_Assesment_Tool_Backend/__pycache__
+                    rm -rf greenX-assessment-tool-frontend/node_modules
+                """
+            }
+        }
+
         stage('Build Docker Images') {
             steps {
                 sh 'docker-compose build'

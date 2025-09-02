@@ -7,14 +7,16 @@ services:
       - "3000:3000"
     deploy:
       replicas: 1
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first    # ensures zero downtime rolling update
       restart_policy:
         condition: on-failure
-      update_config:         # ✅ Rolling update configuration
-        parallelism: 1       # Ek time mein kitne container update hon
-        delay: 10s           # Next container update hone se pehle ka wait
-        order: start-first   # New container pehle start hoga, purana baad mein stop
     depends_on:
       - backend
+    networks:
+      - greenx-net
 
   backend:
     image: junaiddocker743/greenx-backend:latest
@@ -27,14 +29,16 @@ services:
       DB_PORT: 3306
     deploy:
       replicas: 1
-      restart_policy:
-        condition: on-failure
       update_config:
         parallelism: 1
         delay: 10s
         order: start-first
+      restart_policy:
+        condition: on-failure
     depends_on:
       - db
+    networks:
+      - greenx-net
 
   db:
     image: mysql:5.7
@@ -47,9 +51,15 @@ services:
       replicas: 1
       restart_policy:
         condition: on-failure
+    networks:
+      - greenx-net
 
 volumes:
   db_data:
+
+networks:
+  greenx-net:
+    driver: overlay
 
 
 

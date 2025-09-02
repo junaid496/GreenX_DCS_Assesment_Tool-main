@@ -2,14 +2,22 @@ version: '3.8'
 
 services:
   frontend:
-    image: junaiddocker743/greenx-frontend:latest   # Docker Hub se pull karega
+    image: junaiddocker743/greenx-frontend:latest
     ports:
       - "3000:3000"
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      update_config:         # ✅ Rolling update configuration
+        parallelism: 1       # Ek time mein kitne container update hon
+        delay: 10s           # Next container update hone se pehle ka wait
+        order: start-first   # New container pehle start hoga, purana baad mein stop
     depends_on:
       - backend
 
   backend:
-    image: junaiddocker743/greenx-backend:latest    # Docker Hub se pull karega
+    image: junaiddocker743/greenx-backend:latest
     environment:
       ENV: dev
       DB: mysql
@@ -17,24 +25,32 @@ services:
       DB_PASSWORD: passdb0127
       DB_HOST: db
       DB_PORT: 3306
-    ports:
-      - "8000:8000"
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
     depends_on:
       - db
 
   db:
     image: mysql:5.7
-    restart: always
     environment:
       MYSQL_ROOT_PASSWORD: passdb0127
       MYSQL_DATABASE: all_tables
-    ports:
-      - "3306:3306"
     volumes:
       - db_data:/var/lib/mysql
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
 
 volumes:
   db_data:
+
 
 
 

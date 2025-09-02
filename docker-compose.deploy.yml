@@ -62,7 +62,7 @@ services:
     networks:
       - greenx_net
     deploy:
-      replicas: 2
+      replicas: 1
       restart_policy:
         condition: on-failure
       placement:
@@ -71,6 +71,7 @@ services:
 
 volumes:
   db_data:
+
 
 
 

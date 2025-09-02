@@ -10,8 +10,13 @@ services:
 
   backend:
     image: junaid496/greenx-backend:latest    # Docker Hub se pull karega
-    env_file:
-      - ./backend.env                        # Deploy server pe ye env file hogi
+    environment:
+      ENV: dev
+      DB: mysql
+      DB_USER: root
+      DB_PASSWORD: passdb0127
+      DB_HOST: db
+      DB_PORT: 3306
     ports:
       - "8000:8000"
     depends_on:
@@ -30,3 +35,4 @@ services:
 
 volumes:
   db_data:
+

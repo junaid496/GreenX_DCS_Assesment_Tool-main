@@ -1,22 +1,28 @@
 version: '3.8'
 
+networks:
+  greenx_net:
+    driver: overlay
+
 services:
   frontend:
     image: junaiddocker743/greenx-frontend:latest
     ports:
       - "3000:3000"
+    networks:
+      - greenx_net
     deploy:
       replicas: 1
       update_config:
         parallelism: 1
         delay: 10s
-        order: start-first    # ensures zero downtime rolling update
       restart_policy:
         condition: on-failure
+      placement:
+        constraints:
+          - node.role == worker
     depends_on:
       - backend
-    networks:
-      - greenx-net
 
   backend:
     image: junaiddocker743/greenx-backend:latest
@@ -25,20 +31,24 @@ services:
       DB: mysql
       DB_USER: root
       DB_PASSWORD: passdb0127
-      DB_HOST: db
+      DB_HOST: greenx_db
       DB_PORT: 3306
+    ports:
+      - "8000:8000"
+    networks:
+      - greenx_net
     deploy:
       replicas: 1
       update_config:
         parallelism: 1
         delay: 10s
-        order: start-first
       restart_policy:
         condition: on-failure
+      placement:
+        constraints:
+          - node.role == manager
     depends_on:
       - db
-    networks:
-      - greenx-net
 
   db:
     image: mysql:5.7
@@ -47,19 +57,21 @@ services:
       MYSQL_DATABASE: all_tables
     volumes:
       - db_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    networks:
+      - greenx_net
     deploy:
       replicas: 1
       restart_policy:
         condition: on-failure
-    networks:
-      - greenx-net
+      placement:
+        constraints:
+          - node.role == manager
 
 volumes:
   db_data:
 
-networks:
-  greenx-net:
-    driver: overlay
 
 
 

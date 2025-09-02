@@ -2,14 +2,16 @@ version: '3.8'
 
 services:
   frontend:
-    image: junaid496/greenx-frontend:latest   # Docker Hub se pull karega
+    image: junaiddocker743/greenx-frontend:latest   # ✅ Correct Docker Hub repo
     ports:
       - "3000:3000"
     depends_on:
       - backend
 
   backend:
-    image: junaid496/greenx-backend:latest    # Docker Hub se pull karega
+    image: junaiddocker743/greenx-backend:latest    # ✅ Correct Docker Hub repo
+    env_file:
+      - ./backend.env
     environment:
       ENV: dev
       DB: mysql
@@ -35,4 +37,5 @@ services:
 
 volumes:
   db_data:
+
 

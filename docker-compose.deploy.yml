@@ -12,7 +12,7 @@ services:
     networks:
       - greenx_net
     deploy:
-      replicas: 2
+      replicas: 1
       update_config:
         parallelism: 1
         delay: 10s
@@ -38,7 +38,7 @@ services:
     networks:
       - greenx_net
     deploy:
-      replicas: 2
+      replicas: 1
       update_config:
         parallelism: 1
         delay: 10s

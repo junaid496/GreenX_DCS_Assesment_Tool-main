@@ -31,7 +31,7 @@ pipeline {
         stage('Copy Deploy Compose File') {
             steps {
                 sh """
-                    echo "📂 Copying deploy compose file..."
+                    echo " Copying deploy compose file..."
                     ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST} 'mkdir -p ${DEPLOY_PATH}'
                     rsync -avz docker-compose.deploy.yml ${DEPLOY_USER}@${DEPLOY_HOST}:${DEPLOY_PATH}/
                 """

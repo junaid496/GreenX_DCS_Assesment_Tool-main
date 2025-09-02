@@ -6,19 +6,13 @@ pipeline {
         DEPLOY_USER = 'root'
         DEPLOY_HOST = '192.168.18.116'
         DEPLOY_PATH = '/root/project'
+        STACK_NAME = 'greenx'
     }
 
     stages {
-        stage('Clone Code from GitHub') {
+        stage('Checkout Code') {
             steps {
-                retry(3) {
-                    sh 'git config --global http.postBuffer 524288000'
-                    checkout([$class: 'GitSCM',
-                        branches: [[name: '*/main']],
-                        userRemoteConfigs: [[url: 'https://github.com/junaid496/GreenX_DCS_Assesment_Tool-main.git']],
-                        extensions: [[$class: 'CloneOption', shallow: true, depth: 1, timeout: 10]]
-                    ])
-                }
+                checkout scm
             }
         }
 
@@ -34,29 +28,28 @@ pipeline {
             }
         }
 
-        stage('Copy Project to Deployment Server') {
+        stage('Copy Deploy Compose File') {
             steps {
                 sh """
-                    echo "📂 Copying only deploy compose file to remote server..."
+                    echo "📂 Copying deploy compose file..."
                     ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST} 'mkdir -p ${DEPLOY_PATH}'
-
-                    rsync -avz docker-compose.deploy.yml \
-                        ${DEPLOY_USER}@${DEPLOY_HOST}:${DEPLOY_PATH}/
+                    rsync -avz docker-compose.deploy.yml ${DEPLOY_USER}@${DEPLOY_HOST}:${DEPLOY_PATH}/
                 """
             }
         }
 
-        stage('Deploy on Remote Server') {
+        stage('Deploy on Swarm with Rolling Update') {
             steps {
                 sh """
-                    echo "🚀 Deploying on remote server..."
+                    echo "🚀 Deploying with rolling update..."
                     ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST} '
                         cd ${DEPLOY_PATH} &&
-                        docker compose -f docker-compose.deploy.yml up -d
+                        docker stack deploy -c docker-compose.deploy.yml ${STACK_NAME}
                     '
                 """
             }
         }
     }
 }
+
 

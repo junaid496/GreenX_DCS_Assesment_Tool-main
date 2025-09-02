@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   frontend:
-    image: junaiddocker743/greenx-frontend:latest   # Docker Hub se pull kareg
+    image: junaiddocker743/greenx-frontend:latest   # Docke Hub se pull kareg
     ports:
       - "3000:3000"
     depends_on:

@@ -4,7 +4,6 @@ services:
   # 🔵 Blue frontend
   frontend-blue:
     image: junaiddocker743/greenx-frontend:latest
-    container_name: frontend-blue
     ports:
       - "3001:3000"   # internal blue port
     depends_on:
@@ -13,7 +12,6 @@ services:
   # 🟢 Green frontend
   frontend-green:
     image: junaiddocker743/greenx-frontend:latest
-    container_name: frontend-green
     ports:
       - "3002:3000"   # internal green port
     depends_on:
@@ -22,7 +20,6 @@ services:
   # 🔵 Blue backend
   backend-blue:
     image: junaiddocker743/greenx-backend:latest
-    container_name: backend-blue
     environment:
       ENV: dev
       DB: mysql
@@ -38,7 +35,6 @@ services:
   # 🟢 Green backend
   backend-green:
     image: junaiddocker743/greenx-backend:latest
-    container_name: backend-green
     environment:
       ENV: dev
       DB: mysql
@@ -55,7 +51,6 @@ services:
   db:
     image: mysql:5.7
     restart: always
-    container_name: db
     environment:
       MYSQL_ROOT_PASSWORD: passdb0127
       MYSQL_DATABASE: all_tables
@@ -67,7 +62,6 @@ services:
   # 🌐 Reverse Proxy (Nginx)
   nginx:
     image: nginx:latest
-    container_name: nginx-proxy
     ports:
       - "80:80"
     volumes:

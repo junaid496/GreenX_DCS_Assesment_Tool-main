@@ -1,25 +1,15 @@
 version: '3.8'
 
 services:
-  # 🔵 Blue frontend
-  frontend-blue:
-    image: junaiddocker743/greenx-frontend:latest
+  frontend:
+    image: junaiddocker743/greenx-frontend:latest   # Dock Hub se pull kareg
     ports:
-      - "3001:3000"   # internal blue port
+      - "3000:3000"
     depends_on:
-      - backend-blue
+      - backend
 
-  # 🟢 Green frontend
-  frontend-green:
-    image: junaiddocker743/greenx-frontend:latest
-    ports:
-      - "3002:3000"   # internal green port
-    depends_on:
-      - backend-green
-
-  # 🔵 Blue backend
-  backend-blue:
-    image: junaiddocker743/greenx-backend:latest
+  backend:
+    image: junaiddocker743/greenx-backend:latest    # Docker Hub se pull karega
     environment:
       ENV: dev
       DB: mysql
@@ -28,26 +18,10 @@ services:
       DB_HOST: db
       DB_PORT: 3306
     ports:
-      - "8001:8000"
+      - "8000:8000"
     depends_on:
       - db
 
-  # 🟢 Green backend
-  backend-green:
-    image: junaiddocker743/greenx-backend:latest
-    environment:
-      ENV: dev
-      DB: mysql
-      DB_USER: root
-      DB_PASSWORD: passdb0127
-      DB_HOST: db
-      DB_PORT: 3306
-    ports:
-      - "8002:8000"
-    depends_on:
-      - db
-
-  # ✅ Shared Database (same for both)
   db:
     image: mysql:5.7
     restart: always
@@ -59,24 +33,6 @@ services:
     volumes:
       - db_data:/var/lib/mysql
 
-  # 🌐 Reverse Proxy (Nginx)
-  nginx:
-    image: nginx:latest
-    ports:
-      - "80:80"
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-    depends_on:
-      - frontend-blue
-      - frontend-green
-
 volumes:
   db_data:
-
-
-
-
-
-
-
 
